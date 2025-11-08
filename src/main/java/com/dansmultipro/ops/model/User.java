@@ -15,8 +15,8 @@ public class User extends BaseModel {
     private String fullName;
 
     @ManyToOne
-    @JoinColumn(name = "role_id")
-    private Role role;
+    @JoinColumn(name = "role_type_id", nullable = false)
+    private RoleType roleType;
 
     public String getEmail() {
         return email;
@@ -42,11 +42,11 @@ public class User extends BaseModel {
         this.fullName = fullName;
     }
 
-    public Role getRole() {
-        return role;
+    public RoleType getRoleType() {
+        return roleType;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
+    public void setRoleType(RoleType roleType) {
+        this.roleType = roleType;
     }
 }

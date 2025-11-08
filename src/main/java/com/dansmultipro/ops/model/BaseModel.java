@@ -27,7 +27,6 @@ public abstract class BaseModel {
     @Column(nullable = false)
     private Integer optLock;
 
-
     public Boolean getActive() {
         return isActive;
     }
