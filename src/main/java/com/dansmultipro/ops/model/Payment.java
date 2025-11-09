@@ -12,7 +12,7 @@ public class Payment extends BaseModel {
     private BigDecimal amount;
 
     @Column(unique = true, nullable = false, length = 20)
-    private String referenceNumber;
+    private String paymentCode;
 
     @ManyToOne
     @JoinColumn(name = "payment_status_id", nullable = false)
@@ -70,12 +70,12 @@ public class Payment extends BaseModel {
         this.user = user;
     }
 
-    public String getReferenceNumber() {
-        return referenceNumber;
+    public String getPaymentCode() {
+        return paymentCode;
     }
 
-    public void setReferenceNumber(String referenceNumber) {
-        this.referenceNumber = referenceNumber;
+    public void setPaymentCode(String paymentCode) {
+        this.paymentCode = paymentCode;
     }
 }
 

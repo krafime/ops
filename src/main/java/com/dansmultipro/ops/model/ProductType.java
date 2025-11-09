@@ -11,6 +11,8 @@ public class ProductType extends BaseModel {
     private String productCode;
     @Column(length = 8, nullable = false)
     private String productName;
+    @Column(nullable = false)
+    private Boolean isPrepaid;
 
     public String getProductCode() {
         return productCode;
@@ -26,6 +28,14 @@ public class ProductType extends BaseModel {
 
     public void setProductName(String productName) {
         this.productName = productName;
+    }
+
+    public Boolean getIsPrepaid() {
+        return isPrepaid;
+    }
+
+    public void setIsPrepaid(Boolean isPrepaid) {
+        this.isPrepaid = isPrepaid;
     }
 
 }

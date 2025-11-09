@@ -21,5 +21,18 @@ public class UUIDUtil {
             throw new IllegalArgumentException("Invalid UUID format: " + uuidString);
         }
     }
+
+    /**
+     * Convert UUID to String
+     *
+     * @param uuid UUID object
+     * @return String representation of UUID
+     */
+    public static String toString(UUID uuid) {
+        if (uuid == null) {
+            return null;
+        }
+        return uuid.toString();
+    }
 }
 

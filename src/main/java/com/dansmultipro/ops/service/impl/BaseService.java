@@ -49,7 +49,7 @@ public abstract class BaseService {
         return data;
     }
 
-    protected <T extends BaseModel> T reactive(T data) {
+    protected <T extends BaseModel> T reactivate(T data) {
         data.setActive(true);
         data.setDeletedAt(null);
         return data;
