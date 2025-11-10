@@ -16,7 +16,7 @@ public interface UserService extends UserDetailsService {
 
     UserResDTO getUserByEmail(String email);
 
-    CommonResDTO createUserCustomer(UserInsertReqDTO user);
+    InsertResDTO createUserCustomer(UserInsertReqDTO user);
 
     CommonResDTO activateBulkUser(List<String> userId);
 

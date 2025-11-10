@@ -8,23 +8,18 @@ import com.dansmultipro.ops.dto.payment.PaymentCreateReqDTO;
 import com.dansmultipro.ops.dto.payment.PaymentPageDTO;
 import com.dansmultipro.ops.dto.payment.PaymentResDTO;
 import com.dansmultipro.ops.model.Payment;
-import com.dansmultipro.ops.model.PaymentStatus;
 import com.dansmultipro.ops.repo.*;
 import com.dansmultipro.ops.service.PaymentService;
 import com.dansmultipro.ops.util.AuthUtil;
 import com.dansmultipro.ops.util.DateTimeUtil;
 import com.dansmultipro.ops.util.PaymentCodeGenerator;
 import com.dansmultipro.ops.util.UUIDUtil;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.UUID;
 
 @Service
 public class PaymentServiceImpl extends BaseService implements PaymentService {
@@ -38,7 +33,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
 
 
     public PaymentServiceImpl(PaymentRepo paymentRepo, UserRepo userRepo, PaymentTypeRepo paymentTypeRepo,
-                           ProductTypeRepo productTypeRepo, PaymentStatusRepo paymentStatusRepo, AuthUtil authUtil) {
+                              ProductTypeRepo productTypeRepo, PaymentStatusRepo paymentStatusRepo, AuthUtil authUtil) {
         this.authUtil = authUtil;
         this.paymentRepo = paymentRepo;
         this.userRepo = userRepo;
@@ -48,6 +43,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     }
 
     @Override
+    @CacheEvict(value = "paymenthistory", allEntries = true)
     public InsertResDTO createPayment(PaymentCreateReqDTO paymentReq) {
         var userId = authUtil.getLoginId();
         var user = userRepo.findById(userId)
@@ -94,7 +90,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
                 .orElseThrow(() -> new IllegalArgumentException("Invalid payment status: " + newStatus));
 
         if (!newStatus.equals(PaymentStatusConstant.SUCCESS.name()) &&
-            !newStatus.equals(PaymentStatusConstant.FAILED.name())) {
+                !newStatus.equals(PaymentStatusConstant.FAILED.name())) {
             throw new IllegalArgumentException("Payment can only be updated to SUCCESS or FAILED");
         }
 
@@ -191,6 +187,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
                 payment.getProductType().getProductName(),
                 payment.getUser().getFullName(),
                 payment.getUser().getEmail(),
+                payment.getCustomerCode(),
                 createdAt
         );
     }

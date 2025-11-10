@@ -1,6 +1,7 @@
 package com.dansmultipro.ops.controller;
 
 import com.dansmultipro.ops.dto.general.CommonResDTO;
+import com.dansmultipro.ops.dto.general.InsertResDTO;
 import com.dansmultipro.ops.dto.login.GatewayLoginReqDTO;
 import com.dansmultipro.ops.dto.login.LoginReqDTO;
 import com.dansmultipro.ops.dto.login.LoginResDTO;
@@ -27,10 +28,10 @@ import java.util.List;
 @Tag(name = "User Management", description = "API untuk mengelola pengguna (Super Admin, PIC, Customer)")
 public class UserController {
     private final AuthenticationManager authenticationManager;
-    private  final JWTUtil jwtUtil;
+    private final JWTUtil jwtUtil;
     private final UserService userService;
 
-    public UserController(AuthenticationManager authenticationManager, JWTUtil jwtUtil,UserService userService) {
+    public UserController(AuthenticationManager authenticationManager, JWTUtil jwtUtil, UserService userService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.userService = userService;
@@ -49,7 +50,7 @@ public class UserController {
 
         // Generate JWT token with expiration 1 hour from now
         var expiration = Timestamp.valueOf(LocalDateTime.now().plusHours(1));
-        var token = jwtUtil.generateToken(user.getId(),user.getRoleCode(), expiration);
+        var token = jwtUtil.generateToken(user.getId(), user.getRoleCode(), expiration);
 
         var res = new LoginResDTO(
                 token,
@@ -68,7 +69,7 @@ public class UserController {
 
     @PostMapping("/register")
     @Operation(summary = "Create Customer User", description = "Membuat user dengan role Customer")
-    public ResponseEntity<CommonResDTO> createUserCustomer(@Valid @RequestBody UserInsertReqDTO user) {
+    public ResponseEntity<InsertResDTO> createUserCustomer(@Valid @RequestBody UserInsertReqDTO user) {
         var response = userService.createUserCustomer(user);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }

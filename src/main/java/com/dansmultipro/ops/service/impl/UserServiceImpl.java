@@ -13,7 +13,6 @@ import com.dansmultipro.ops.service.UserService;
 import com.dansmultipro.ops.util.JWTUtil;
 import com.dansmultipro.ops.util.UUIDUtil;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -52,7 +51,6 @@ public class UserServiceImpl extends BaseService implements UserService {
             throw new BadCredentialsException("Invalid secret key");
         }
 
-
         var expiration = Timestamp.valueOf(LocalDateTime.now().plusHours(1));
         var token = jwtUtil.generateToken(gatewayUUID, RoleTypeConstant.GTW.name(), expiration);
 
@@ -69,7 +67,7 @@ public class UserServiceImpl extends BaseService implements UserService {
                 .filter(user -> {
                     String roleCode = user.getRoleType().getRoleCode();
                     return !roleCode.equals(RoleTypeConstant.SA.name()) &&
-                           !roleCode.equals(RoleTypeConstant.SYS.name());
+                            !roleCode.equals(RoleTypeConstant.SYS.name());
                 })
                 .map(this::mapToDTO)
                 .toList();
@@ -104,7 +102,7 @@ public class UserServiceImpl extends BaseService implements UserService {
     }
 
     @Override
-    public CommonResDTO createUserCustomer(UserInsertReqDTO user) {
+    public InsertResDTO createUserCustomer(UserInsertReqDTO user) {
         var isEmailExist = userRepo.findByEmail(user.email()).isPresent();
         if (isEmailExist) {
             throw new IllegalArgumentException("Email already registered");
@@ -123,9 +121,10 @@ public class UserServiceImpl extends BaseService implements UserService {
         userData.setPassword(bCryptPasswordEncoder.encode(user.password()));
         userData.setRoleType(roleType);
 
-        userRepo.save(super.insert(userData, systemUser.getId()));
+        var res = userRepo.save(super.insert(userData, systemUser.getId()));
 
-        return new CommonResDTO(
+        return new InsertResDTO(
+                res.getId(),
                 "Registration successful"
         );
     }

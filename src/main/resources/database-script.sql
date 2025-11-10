@@ -43,7 +43,7 @@ VALUES
 INSERT INTO users (id, email, password, full_name, role_types_id, is_active, created_at, created_by, opt_lock)
 VALUES (
     '98e06d47-ce74-4d8c-8811-fe754b97cd70'::uuid,
-    'gateway@system.com',
+    'krafime+2@gmail.com',
     '$2a$10$N9qo8uLOickgx2ZMRZoMye.fEaXVXxYLW5I.gPMjbHa8ypNp0WgXq',
     'User Gateway',
     (SELECT id FROM role_types WHERE role_code = 'GTW' LIMIT 1),

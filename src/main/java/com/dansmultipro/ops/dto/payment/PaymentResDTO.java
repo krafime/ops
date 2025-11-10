@@ -1,7 +1,6 @@
 package com.dansmultipro.ops.dto.payment;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 public record PaymentResDTO(
         String id,
@@ -13,6 +12,7 @@ public record PaymentResDTO(
         String productType,
         String customerName,
         String customerEmail,
+        String customerCode,
         String createdAt
 ) {
 }
