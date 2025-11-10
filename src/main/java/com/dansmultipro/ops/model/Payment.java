@@ -11,19 +11,22 @@ public class Payment extends BaseModel {
     @Column(nullable = false)
     private BigDecimal amount;
 
-    @Column(unique = true, nullable = false, length = 20)
+    @Column(unique = true, nullable = false, length = 23)
     private String paymentCode;
 
+    @Column(unique = true, nullable = false, length = 20)
+    private String customerCode;
+
     @ManyToOne
-    @JoinColumn(name = "payment_status_id", nullable = false)
+    @JoinColumn(name = "payment_statuses_id", nullable = false)
     private PaymentStatus paymentStatus;
 
     @ManyToOne
-    @JoinColumn(name = "payment_type_id", nullable = false)
+    @JoinColumn(name = "payment_types_id", nullable = false)
     private PaymentType paymentType;
 
     @ManyToOne
-    @JoinColumn(name = "product_type_id", nullable = false)
+    @JoinColumn(name = "product_types_id", nullable = false)
     private ProductType productType;
 
     @ManyToOne
@@ -76,6 +79,14 @@ public class Payment extends BaseModel {
 
     public void setPaymentCode(String paymentCode) {
         this.paymentCode = paymentCode;
+    }
+
+    public String getCustomerCode() {
+        return customerCode;
+    }
+
+    public void setCustomerCode(String customerCode) {
+        this.customerCode = customerCode;
     }
 }
 

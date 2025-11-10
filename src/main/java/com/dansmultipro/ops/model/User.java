@@ -14,8 +14,8 @@ public class User extends BaseModel {
     @Column(length = 100, nullable = false)
     private String fullName;
 
-    @ManyToOne
-    @JoinColumn(name = "role_type_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_types_id", nullable = false)
     private RoleType roleType;
 
     public String getEmail() {

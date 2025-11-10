@@ -5,9 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "payment_status")
+@Table(name = "payment_statuses")
 public class PaymentStatus extends BaseModel {
-
     @Column(length = 10, nullable = false, unique = true)
     private String statusCode;
     @Column(length = 15, nullable = false)

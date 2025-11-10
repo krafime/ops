@@ -11,8 +11,4 @@ public interface ProductTypeService {
     ProductTypeResDTO getProductTypeById(String id);
 
     ProductTypeResDTO getProductTypeByCode(String productCode);
-
-    CommonResDTO deleteProductType(String id, String productCode);
-
-    CommonResDTO reactivateProductType(String id, String productCode);
 }

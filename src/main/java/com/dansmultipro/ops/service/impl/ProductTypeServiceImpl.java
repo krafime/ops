@@ -46,53 +46,11 @@ public class ProductTypeServiceImpl extends BaseService implements ProductTypeSe
         return mapToDTO(productType);
     }
 
-    @Override
-    public CommonResDTO deleteProductType(String id, String productCode) {
-        ProductType productType;
-        if ((productCode == null && id == null) || (productCode != null && id != null)) {
-            throw new IllegalArgumentException("Either id or product code must be provided, but not both");
-        } else if (productCode != null) {
-            productType = productTypeRepo.findByProductCode(productCode)
-                    .orElseThrow(() -> new IllegalArgumentException("Product type not found"));
-        } else {
-            var productId = UUIDUtil.toUUID(id);
-            productType = productTypeRepo.findById(productId)
-                    .orElseThrow(() -> new IllegalArgumentException("Product type not found"));
-        }
-
-        productTypeRepo.save(super.delete(productType));
-        return new CommonResDTO(
-                "Product type deleted successfully"
-        );
-    }
-
-    @Override
-    public CommonResDTO reactivateProductType(String id, String productCode) {
-        ProductType productType;
-        if ((productCode == null && id == null) || (productCode != null && id != null)) {
-            throw new IllegalArgumentException("Either id or product code must be provided, but not both");
-        } else if (productCode != null) {
-            productType = productTypeRepo.findByProductCode(productCode)
-                    .orElseThrow(() -> new IllegalArgumentException("Product type not found"));
-        } else {
-            var productId = UUIDUtil.toUUID(id);
-            productType = productTypeRepo.findById(productId)
-                    .orElseThrow(() -> new IllegalArgumentException("Product type not found"));
-        }
-
-        productTypeRepo.save(super.reactivate(productType));
-        return new CommonResDTO(
-                "Product type reactivated successfully"
-        );
-    }
-
-
     private ProductTypeResDTO mapToDTO(ProductType productType) {
         return new ProductTypeResDTO(
                 productType.getId(),
                 productType.getProductCode(),
                 productType.getProductName(),
-                productType.getIsPrepaid(),
                 productType.getActive()
         );
     }

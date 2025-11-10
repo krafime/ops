@@ -5,7 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "role_type")
+@Table(name = "role_types")
 public class RoleType extends BaseModel {
 
     @Column(length = 12, nullable = false)

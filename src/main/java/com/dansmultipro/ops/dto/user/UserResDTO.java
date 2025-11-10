@@ -3,14 +3,14 @@ package com.dansmultipro.ops.dto.user;
 public class UserResDTO{
     private String id;
     private String email;
-    private String fullname;
+    private String fullName;
     private String roleCode;
     private int optLock;
 
-    public UserResDTO(String id, String email, String fullname, String roleCode, int optLock) {
+    public UserResDTO(String id, String email, String fullName, String roleCode, int optLock) {
         this.id = id;
         this.email = email;
-        this.fullname = fullname;
+        this.fullName = fullName;
         this.roleCode = roleCode;
         this.optLock = optLock;
     }
@@ -34,12 +34,12 @@ public class UserResDTO{
         this.email = email;
     }
 
-    public String getFullname() {
-        return fullname;
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setFullname(String fullname) {
-        this.fullname = fullname;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public String getRoleCode() {

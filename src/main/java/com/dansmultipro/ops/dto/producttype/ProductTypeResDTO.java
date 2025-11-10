@@ -6,7 +6,6 @@ public record ProductTypeResDTO(
         UUID id,
         String productCode,
         String productName,
-        Boolean isPrepaid,
         Boolean isActive
 ) {
 }

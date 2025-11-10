@@ -18,7 +18,6 @@ public abstract class BaseModel {
     private UUID createdBy;
     private LocalDateTime updatedAt;
     private UUID updatedBy;
-    private LocalDateTime deletedAt;
 
     @Column(nullable = false)
     private Boolean isActive;
@@ -57,14 +56,6 @@ public abstract class BaseModel {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
-    }
-
-    public void setDeletedAt(LocalDateTime deletedAt) {
-        this.deletedAt = deletedAt;
     }
 
     public LocalDateTime getUpdatedAt() {

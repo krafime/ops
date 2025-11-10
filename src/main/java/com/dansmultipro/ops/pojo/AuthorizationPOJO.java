@@ -1,5 +1,5 @@
-//package com.dansmultipro.ops.pojo;
-//
-//public record AuthorizationPOJO(String id) {
-//
-//}
+package com.dansmultipro.ops.pojo;
+
+public record AuthorizationPOJO(String id) {
+
+}

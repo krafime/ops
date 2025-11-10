@@ -7,7 +7,7 @@ import jakarta.persistence.Table;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "payment_type")
+@Table(name = "payment_types")
 public class PaymentType extends BaseModel {
     @Column(unique = true, length = 15, nullable = false)
     private String paymentCode;
@@ -15,6 +15,7 @@ public class PaymentType extends BaseModel {
     @Column(length = 15, nullable = false)
     private String paymentName;
 
+    @Column(nullable = false)
     private BigDecimal paymentFee;
 
     public String getPaymentTypeCode() {
