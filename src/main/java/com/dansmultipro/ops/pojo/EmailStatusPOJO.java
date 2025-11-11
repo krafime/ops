@@ -1,6 +1,6 @@
 package com.dansmultipro.ops.pojo;
 
-public record EmailPOJO(
+public record EmailStatusPOJO(
         String email,
         String customerName,
         String paymentCode,

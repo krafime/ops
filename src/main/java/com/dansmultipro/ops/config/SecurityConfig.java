@@ -40,6 +40,7 @@ public class SecurityConfig {
         matchers.add(PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST,"/api/users/login"));
         matchers.add(PathPatternRequestMatcher.withDefaults().matcher( HttpMethod.POST, "/api/users/login/gateway"));
         matchers.add(PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/users/register"));
+        matchers.add(PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/users/forgot-password"));
         return matchers;
     }
 

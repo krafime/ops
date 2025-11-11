@@ -13,6 +13,8 @@ public class RabbitConfig {
     public static final String EMAIL_RK_SUCCESS = "email.notification.success.key";
     public static final String EMAIL_QUEUE_FAILED = "email.notification.failed.queue";
     public static final String EMAIL_RK_FAILED = "email.notification.failed.key";
+    public static final String EMAIL_QUEUE_FORGOT_PASSWORD = "email.notification.forgot.password.queue";
+    public static final String EMAIL_RK_FORGOT_PASSWORD = "email.notification.forgot.password.key";
 
 
     @Bean
@@ -42,6 +44,18 @@ public class RabbitConfig {
         return BindingBuilder.bind(emailQueueFailed())
                 .to(emailExchange())
                 .with(EMAIL_RK_FAILED);
+    }
+
+    @Bean
+    public Queue emailQueueForgotPassword() {
+        return QueueBuilder.durable(EMAIL_QUEUE_FORGOT_PASSWORD).build();
+    }
+
+    @Bean
+    public Binding emailBindingForgotPassword() {
+        return BindingBuilder.bind(emailQueueForgotPassword())
+                .to(emailExchange())
+                .with(EMAIL_RK_FORGOT_PASSWORD);
     }
 
 

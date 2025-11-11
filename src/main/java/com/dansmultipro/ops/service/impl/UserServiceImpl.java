@@ -5,15 +5,18 @@ import com.dansmultipro.ops.dto.general.CommonResDTO;
 import com.dansmultipro.ops.dto.general.InsertResDTO;
 import com.dansmultipro.ops.dto.login.LoginResDTO;
 import com.dansmultipro.ops.dto.user.ChangePasswordReqDTO;
+import com.dansmultipro.ops.dto.user.ForgotPasswordReqDTO;
 import com.dansmultipro.ops.dto.user.UserInsertReqDTO;
 import com.dansmultipro.ops.dto.user.UserResDTO;
 import com.dansmultipro.ops.model.User;
+import com.dansmultipro.ops.pojo.EmailForgotPasswordPOJO;
 import com.dansmultipro.ops.repo.RoleTypeRepo;
 import com.dansmultipro.ops.repo.UserRepo;
 import com.dansmultipro.ops.service.UserService;
-import com.dansmultipro.ops.util.AuthUtil;
-import com.dansmultipro.ops.util.JWTUtil;
-import com.dansmultipro.ops.util.UUIDUtil;
+import com.dansmultipro.ops.util.*;
+import jakarta.mail.MessagingException;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,6 +29,8 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.dansmultipro.ops.config.RabbitConfig.EMAIL_QUEUE_FORGOT_PASSWORD;
+
 @Service
 public class UserServiceImpl extends BaseService implements UserService {
 
@@ -34,20 +39,27 @@ public class UserServiceImpl extends BaseService implements UserService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JWTUtil jwtUtil;
     private final AuthUtil authUtil;
+    private final EmailMessageBuilder emailMessageBuilder;
+    private final RabbitTemplate rabbitTemplate;
+    private final EmailUtil emailUtil;
 
     @Value("${gateway.secret.key}")
     private String gatewaySecretKey;
     @Value("${gateway.uuid}")
     private String gatewayUUID;
 
-    public UserServiceImpl(UserRepo userRepo, RoleTypeRepo roleTypeRepo, BCryptPasswordEncoder bCryptPasswordEncoder, JWTUtil jwtUtil, AuthUtil authUtil) {
+    public UserServiceImpl(UserRepo userRepo, RoleTypeRepo roleTypeRepo, BCryptPasswordEncoder bCryptPasswordEncoder,
+                           JWTUtil jwtUtil, AuthUtil authUtil, EmailMessageBuilder emailMessageBuilder,
+                           RabbitTemplate rabbitTemplate, EmailUtil emailUtil) {
+        this.emailUtil = emailUtil;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.userRepo = userRepo;
         this.roleTypeRepo = roleTypeRepo;
         this.jwtUtil = jwtUtil;
         this.authUtil = authUtil;
+        this.emailMessageBuilder = emailMessageBuilder;
+        this.rabbitTemplate = rabbitTemplate;
     }
-
 
     @Override
     public LoginResDTO loginGateway(String secretKey) {
@@ -163,16 +175,6 @@ public class UserServiceImpl extends BaseService implements UserService {
         );
     }
 
-    private UserResDTO mapToDTO(User user) {
-        return new UserResDTO(
-                user.getId().toString(),
-                user.getEmail(),
-                user.getFullName(),
-                user.getRoleType().getRoleCode(),
-                user.getOptLock()
-        );
-    }
-
     @Override
     public CommonResDTO changePassword(ChangePasswordReqDTO changePasswordReq) {
         var userId = authUtil.getLoginId();
@@ -188,10 +190,54 @@ public class UserServiceImpl extends BaseService implements UserService {
         }
 
         var hashedNewPassword = bCryptPasswordEncoder.encode(changePasswordReq.newPassword());
-
         user.setPassword(hashedNewPassword);
         userRepo.save(super.update(user));
 
         return new CommonResDTO("Password changed successfully");
     }
+
+    @Override
+    public CommonResDTO forgotPassword(ForgotPasswordReqDTO forgotPasswordReq) {
+        var user = userRepo.findByEmail(forgotPasswordReq.email())
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + forgotPasswordReq.email()));
+
+        // Generate random password
+        String generatedPassword = PasswordUtil.generateRandomPassword();
+        String hashedPassword = bCryptPasswordEncoder.encode(generatedPassword);
+
+        // Update password
+        user.setPassword(hashedPassword);
+        userRepo.save(super.update(user));
+
+        // Build HTML email content
+        String htmlContent = emailMessageBuilder.buildForgotPasswordHtml(user.getFullName(), generatedPassword);
+
+        // Create EmailPOJO for RabbitMQ
+        var emailPOJO = new EmailForgotPasswordPOJO(
+                user.getEmail(),
+                user.getFullName(),
+                htmlContent
+        );
+
+        // Send email via RabbitMQ
+        rabbitTemplate.convertAndSend(EMAIL_QUEUE_FORGOT_PASSWORD, emailPOJO);
+
+        return new CommonResDTO("A temporary password has been sent to your email. Please login with it and change your password immediately.");
+    }
+
+    @RabbitListener(queues = EMAIL_QUEUE_FORGOT_PASSWORD)
+    public void receiveDataForgotPassword(EmailForgotPasswordPOJO pojo) throws MessagingException {
+        emailUtil.sendEmail("Permintaan Lupa Password", pojo.message(), pojo.email());
+    }
+
+    private UserResDTO mapToDTO(User user) {
+        return new UserResDTO(
+                user.getId().toString(),
+                user.getEmail(),
+                user.getFullName(),
+                user.getRoleType().getRoleCode(),
+                user.getOptLock()
+        );
+    }
 }
+

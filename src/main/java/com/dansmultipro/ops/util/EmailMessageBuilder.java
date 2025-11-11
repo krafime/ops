@@ -53,6 +53,82 @@ public class EmailMessageBuilder {
         );
     }
 
+    public String buildForgotPasswordHtml(String customerName, String temporaryPassword) {
+        return """
+                <html>
+                  <body style="margin:0;padding:0;background:#f6f7f9;">
+                    <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="background:#f6f7f9;">
+                      <tr>
+                        <td align="center" style="padding:24px;">
+                          <table role="presentation" width="600" cellpadding="0" cellspacing="0" 
+                                 style="background:#ffffff;border-radius:12px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#111;">
+                            <tr>
+                              <td style="padding:24px 24px 8px 24px;">
+                                <div style="font-size:18px;font-weight:700;color:#007bff;">Pengaturan Ulang Password</div>
+                              </td>
+                            </tr>
+                
+                            <tr>
+                              <td style="padding:16px 24px;">
+                                <div style="font-size:16px;font-weight:700;margin-bottom:8px;">Halo %s,</div>
+                                <div style="font-size:14px;line-height:1.8;color:#555;">
+                                  Anda telah meminta untuk mengatur ulang password akun Anda. Berikut adalah password sementara Anda:
+                                </div>
+                              </td>
+                            </tr>
+                
+                            <tr>
+                              <td style="padding:0 24px;">
+                                <table width="100%%" cellpadding="0" cellspacing="0" 
+                                       style="border:2px solid #007bff;border-radius:8px;background:#f0f7ff;">
+                                  <tr>
+                                    <td style="padding:16px;text-align:center;">
+                                      <div style="font-size:12px;color:#666;margin-bottom:8px;">Password Sementara Anda:</div>
+                                      <div style="font-size:18px;font-weight:700;color:#007bff;font-family:monospace;letter-spacing:2px;">%s</div>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                
+                            <tr>
+                              <td style="padding:20px 24px 0 24px;">
+                                <div style="font-size:14px;line-height:1.8;color:#555;">
+                                  <strong>Instruksi:</strong>
+                                  <ol style="margin:8px 0;padding-left:20px;">
+                                    <li>Login menggunakan password sementara di atas</li>
+                                    <li>Segera ubah password Anda ke password yang lebih aman</li>
+                                    <li>Jangan bagikan password ini kepada siapapun</li>
+                                  </ol>
+                                </div>
+                              </td>
+                            </tr>
+                
+                            <tr>
+                              <td style="padding:16px 24px;background:#fff3cd;border-top:1px solid #ffeeba;">
+                                <div style="font-size:12px;color:#856404;">
+                                  <strong>⚠️ Keamanan:</strong> Jika Anda tidak meminta ini, segera hubungi kami atau abaikan email ini.
+                                </div>
+                              </td>
+                            </tr>
+                
+                            <tr>
+                              <td style="padding:20px 24px;text-align:center;border-top:1px solid #e0e0e0;">
+                                <div style="font-size:12px;color:#999;">
+                                  © 2025 Online Payment System. Semua hak dilindungi.
+                                </div>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </body>
+                </html>
+                """
+                .formatted(customerName, temporaryPassword);
+    }
+
     // --- Shared template -----------------------------------------------------
 
     private String baseHtml(

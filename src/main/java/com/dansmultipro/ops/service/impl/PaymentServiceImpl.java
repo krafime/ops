@@ -8,7 +8,7 @@ import com.dansmultipro.ops.dto.payment.PaymentCreateReqDTO;
 import com.dansmultipro.ops.dto.payment.PaymentPageDTO;
 import com.dansmultipro.ops.dto.payment.PaymentResDTO;
 import com.dansmultipro.ops.model.Payment;
-import com.dansmultipro.ops.pojo.EmailPOJO;
+import com.dansmultipro.ops.pojo.EmailStatusPOJO;
 import com.dansmultipro.ops.repo.*;
 import com.dansmultipro.ops.service.PaymentService;
 import com.dansmultipro.ops.specification.PaymentSpecification;
@@ -218,12 +218,12 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     }
 
     @RabbitListener(queues = EMAIL_QUEUE_SUCCESS)
-    public void receiveDataSuccess(EmailPOJO pojo) throws MessagingException {
+    public void receiveDataSuccess(EmailStatusPOJO pojo) throws MessagingException {
         emailUtil.sendEmail("Pembayaran Berhasil", pojo.message(), pojo.email());
     }
 
     @RabbitListener(queues = EMAIL_QUEUE_FAILED)
-    public void receiveDataFailed(EmailPOJO pojo) throws MessagingException {
+    public void receiveDataFailed(EmailStatusPOJO pojo) throws MessagingException {
         emailUtil.sendEmail("Pembayaran Gagal", pojo.message(), pojo.email());
     }
 
@@ -277,7 +277,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
         rabbitTemplate.convertAndSend(queueName, emailPOJO);
     }
 
-    private EmailPOJO createEmailPOJO(Payment payment, String status) {
+    private EmailStatusPOJO createEmailPOJO(Payment payment, String status) {
         if (!PaymentStatusConstant.SUCCESS.name().equals(status) &&
                 !PaymentStatusConstant.FAILED.name().equals(status)) {
             return null;
@@ -294,7 +294,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
                 status
         );
 
-        return new EmailPOJO(
+        return new EmailStatusPOJO(
                 payment.getUser().getEmail(),
                 payment.getUser().getFullName(),
                 payment.getPaymentCode(),
