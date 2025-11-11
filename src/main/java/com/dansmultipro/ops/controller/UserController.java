@@ -5,6 +5,7 @@ import com.dansmultipro.ops.dto.general.InsertResDTO;
 import com.dansmultipro.ops.dto.login.GatewayLoginReqDTO;
 import com.dansmultipro.ops.dto.login.LoginReqDTO;
 import com.dansmultipro.ops.dto.login.LoginResDTO;
+import com.dansmultipro.ops.dto.user.ChangePasswordReqDTO;
 import com.dansmultipro.ops.dto.user.UserInsertReqDTO;
 import com.dansmultipro.ops.dto.user.UserResDTO;
 import com.dansmultipro.ops.service.UserService;
@@ -99,5 +100,12 @@ public class UserController {
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
+    @PatchMapping("/change-password")
+    @PreAuthorize("hasAuthority('CUST')")
+    @Operation(summary = "Change password", description = "Customer atau Gateway mengubah password dengan memasukkan oldPassword dan newPassword")
+    public ResponseEntity<CommonResDTO> changePassword(@Valid @RequestBody ChangePasswordReqDTO changePasswordReq) {
+        var response = userService.changePassword(changePasswordReq);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
 }

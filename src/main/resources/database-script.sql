@@ -43,13 +43,47 @@ VALUES
 INSERT INTO users (id, email, password, full_name, role_types_id, is_active, created_at, created_by, opt_lock)
 VALUES (
     '98e06d47-ce74-4d8c-8811-fe754b97cd70'::uuid,
-    'krafime+2@gmail.com',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMye.fEaXVXxYLW5I.gPMjbHa8ypNp0WgXq',
+    'krafime+3@gmail.com',
+    '$2a$12$BPbXTA2qgaFFCZlWInrYyODjuc.PX2XUBTMyWwbr/B8tG2/wvVSny',
     'User Gateway',
     (SELECT id FROM role_types WHERE role_code = 'GTW' LIMIT 1),
     true,
     NOW(),
     '792b3990-9315-405a-ba5a-da07770c1edf'::uuid,
     0
-);
+),
+(
+'792b3990-9315-405a-ba5a-da07770c1edf'::uuid,)
+    'krafime+1@gmail.com',
+    '$2a$12$BPbXTA2qgaFFCZlWInrYyODjuc.PX2XUBTMyWwbr/B8tG2/wvVSny',
+    'System Admin',
+    (SELECT id FROM role_types WHERE role_code = 'SYS' LIMIT 1),
+    true,
+    NOW(),
+    '792b3990-9315-405a-ba5a-da07770c1edf'::uuid,
+    0
+),
+(
+'b481889d-b67e-4caf-9dd8-f58625fcdc19'::uuid,
+    'krafime+2@gmail.com',
+    '$2a$12$BPbXTA2qgaFFCZlWInrYyODjuc.PX2XUBTMyWwbr/B8tG2/wvVSny',
+    'Super Admin',
+    (SELECT id FROM role_types WHERE role_code = 'SA' LIMIT 1),
+    true,
+    NOW(),
+    '792b3990-9315-405a-ba5a-da07770c1edf'::uuid,
+    0
+    ),
+    (
+    '01462d68-7b51-4f18-be09-013395c5fce5'::uuid,
+    'krafime+10@gmail.com',
+    '$2a$12$BPbXTA2qgaFFCZlWInrYyODjuc.PX2XUBTMyWwbr/B8tG2/wvVSny',
+    'Customer User',
+    (SELECT id FROM role_types WHERE role_code = 'CUST' LIMIT 1),
+    true,
+    NOW(),
+    '792b3990-9315-405a-ba5a-da07770c1edf'::uuid,
+    0
+    )
+;
 

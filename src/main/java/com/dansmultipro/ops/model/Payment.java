@@ -14,7 +14,7 @@ public class Payment extends BaseModel {
     @Column(unique = true, nullable = false, length = 23)
     private String paymentCode;
 
-    @Column(unique = true, nullable = false, length = 20)
+    @Column(nullable = false, length = 20)
     private String customerCode;
 
     @ManyToOne

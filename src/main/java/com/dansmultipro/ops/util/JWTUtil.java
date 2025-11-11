@@ -1,8 +1,6 @@
 package com.dansmultipro.ops.util;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -33,16 +31,10 @@ public class JWTUtil {
 
     public Claims validateToken(String token) {
         var secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKeyStr));
-        try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(secretKey)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-        } catch (ExpiredJwtException e) {
-            throw new IllegalArgumentException("Token has expired");
-        } catch (JwtException e) {
-            throw new IllegalArgumentException("Invalid token");
-        }
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

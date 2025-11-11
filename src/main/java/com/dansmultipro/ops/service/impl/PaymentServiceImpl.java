@@ -8,18 +8,25 @@ import com.dansmultipro.ops.dto.payment.PaymentCreateReqDTO;
 import com.dansmultipro.ops.dto.payment.PaymentPageDTO;
 import com.dansmultipro.ops.dto.payment.PaymentResDTO;
 import com.dansmultipro.ops.model.Payment;
+import com.dansmultipro.ops.pojo.EmailPOJO;
 import com.dansmultipro.ops.repo.*;
 import com.dansmultipro.ops.service.PaymentService;
-import com.dansmultipro.ops.util.AuthUtil;
-import com.dansmultipro.ops.util.DateTimeUtil;
-import com.dansmultipro.ops.util.PaymentCodeGenerator;
-import com.dansmultipro.ops.util.UUIDUtil;
+import com.dansmultipro.ops.specification.PaymentSpecification;
+import com.dansmultipro.ops.util.*;
+import jakarta.mail.MessagingException;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
+
+import static com.dansmultipro.ops.config.RabbitConfig.EMAIL_QUEUE_FAILED;
+import static com.dansmultipro.ops.config.RabbitConfig.EMAIL_QUEUE_SUCCESS;
 
 @Service
 public class PaymentServiceImpl extends BaseService implements PaymentService {
@@ -30,10 +37,22 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     private final ProductTypeRepo productTypeRepo;
     private final PaymentStatusRepo paymentStatusRepo;
     private final AuthUtil authUtil;
+    private final RabbitTemplate rabbitTemplate;
+    private final EmailUtil emailUtil;
+    private final CurrencyFormatter currencyFormatter;
+    private final EmailMessageBuilder emailMessageBuilder;
+    private final DateTimeUtil dateTimeUtil;
 
 
     public PaymentServiceImpl(PaymentRepo paymentRepo, UserRepo userRepo, PaymentTypeRepo paymentTypeRepo,
-                              ProductTypeRepo productTypeRepo, PaymentStatusRepo paymentStatusRepo, AuthUtil authUtil) {
+                              ProductTypeRepo productTypeRepo, PaymentStatusRepo paymentStatusRepo, AuthUtil authUtil,
+                              RabbitTemplate rabbitTemplate, EmailUtil emailUtil, CurrencyFormatter currencyFormatter,
+                              EmailMessageBuilder emailMessageBuilder, DateTimeUtil dateTimeUtil) {
+        this.dateTimeUtil = dateTimeUtil;
+        this.emailMessageBuilder = emailMessageBuilder;
+        this.currencyFormatter = currencyFormatter;
+        this.emailUtil = emailUtil;
+        this.rabbitTemplate = rabbitTemplate;
         this.authUtil = authUtil;
         this.paymentRepo = paymentRepo;
         this.userRepo = userRepo;
@@ -57,6 +76,16 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
 
         var processingStatus = paymentStatusRepo.findByStatusCode(PaymentStatusConstant.PROCESSING.name())
                 .orElseThrow(() -> new IllegalArgumentException("Payment Status not found"));
+
+        // Check if customer code already has a PROCESSING payment
+        var existingPayment = PaymentSpecification.customerCodeAndStatus(
+                paymentReq.customerCode(),
+                PaymentStatusConstant.PROCESSING.name()
+        );
+
+        if (paymentRepo.findOne(existingPayment).isPresent()) {
+            throw new IllegalArgumentException("Customer code already has a PROCESSING payment");
+        }
 
         var payment = new Payment();
         var amount = paymentReq.amount().add(paymentType.getPaymentFee());
@@ -97,6 +126,9 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
         payment.setPaymentStatus(newPaymentStatus);
         paymentRepo.save(super.update(payment));
 
+        // Send email notification
+        buildAndSendEmailNotification(payment, newStatus);
+
         return new CommonResDTO("Payment status updated to " + newStatus);
     }
 
@@ -125,12 +157,9 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     }
 
     @Override
-    @Cacheable(value = "paymenthistory", key = "'payments:' + #page + ':' + #limit + ':' + (#status != null ? #status : 'all')")
-    public PaymentPageDTO<PaymentResDTO> getPaymentHistory(Integer page, Integer limit, String status) {
+    @Cacheable(value = "paymenthistory", key = "#customerId.toString() + ':' + #status + ':' + #page + ':' + #limit")
+    public PaymentPageDTO<PaymentResDTO> getPaymentHistory(Integer page, Integer limit, String status, UUID customerId) {
         var userId = authUtil.getLoginId();
-        if (userId == null) {
-            throw new IllegalArgumentException("User not authenticated");
-        }
 
         if (status != null && !status.isEmpty()) {
             return getPaymentHistoryByStatus(status, PageRequest.of(page - 1, limit));
@@ -139,18 +168,29 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
         var user = userRepo.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        var userRole = user.getRoleType().getRoleCode();
         var pageable = PageRequest.of(page - 1, limit);
 
-        // Simplify: Customer lihat punya dia, Admin/GTW lihat semua
-        var payments = RoleTypeConstant.CUST.name().equals(userRole)
-                ? paymentRepo.findByUserOrderByCreatedAtDesc(user, pageable)
-                : paymentRepo.findAllByOrderByCreatedAtDesc(pageable);
+        // Use Specification to filter by user
+        var payments = paymentRepo.findAll(PaymentSpecification.byUser(user), pageable);
 
         return mapToDTO(payments, page, limit);
     }
 
-    @Cacheable(value = "paymenthistory", key = "'payments:status:' + #status + ':' + #pageable.pageNumber + ':' + #pageable.pageSize")
+    @Override
+    @Cacheable(value = "paymenthistory", key = "'all' + ':' + #status + ':' + #page + ':' + #limit")
+    public PaymentPageDTO<PaymentResDTO> getPaymentHistory(Integer page, Integer limit, String status) {
+        var pageable = PageRequest.of(page - 1, limit);
+
+        if (status != null && !status.isEmpty()) {
+            return getPaymentHistoryByStatus(status, pageable);
+        }
+
+        // Use Specification to get all payments
+        var payments = paymentRepo.findAll(PaymentSpecification.all(), pageable);
+
+        return mapToDTO(payments, page, limit);
+    }
+
     private PaymentPageDTO<PaymentResDTO> getPaymentHistoryByStatus(String status, Pageable pageable) {
         var userId = authUtil.getLoginId();
         if (userId == null) {
@@ -165,23 +205,37 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
 
         var userRole = user.getRoleType().getRoleCode();
 
-        // Simplify: Customer lihat punya dia dengan status X, Admin/GTW lihat semua dengan status X
-        var payments = RoleTypeConstant.CUST.name().equals(userRole)
-                ? paymentRepo.findByUserAndPaymentStatusOrderByCreatedAtDesc(user, paymentStatus, pageable)
-                : paymentRepo.findByPaymentStatusOrderByCreatedAtDesc(paymentStatus, pageable);
+        // Use Specification untuk filter lebih flexible
+        var specification = RoleTypeConstant.CUST.name().equals(userRole)
+                ? PaymentSpecification.userAndStatus(user, paymentStatus)
+                : PaymentSpecification.byStatus(paymentStatus);
+
+        var payments = paymentRepo.findAll(specification, pageable);
 
         int page = pageable.getPageNumber() + 1;
         int limit = pageable.getPageSize();
         return mapToDTO(payments, page, limit);
     }
 
+    @RabbitListener(queues = EMAIL_QUEUE_SUCCESS)
+    public void receiveDataSuccess(EmailPOJO pojo) throws MessagingException {
+        emailUtil.sendEmail("Pembayaran Berhasil", pojo.message(), pojo.email());
+    }
+
+    @RabbitListener(queues = EMAIL_QUEUE_FAILED)
+    public void receiveDataFailed(EmailPOJO pojo) throws MessagingException {
+        emailUtil.sendEmail("Pembayaran Gagal", pojo.message(), pojo.email());
+    }
+
     private PaymentResDTO mapToDTO(Payment payment) {
-        var createdAt = DateTimeUtil.formatToStandardString(payment.getCreatedAt());
+        var createdAt = dateTimeUtil.formatToStandardString(payment.getCreatedAt());
+        var ammountFormat = currencyFormatter.formatRupiah(payment.getAmount());
+        var paymentFeeFormat = currencyFormatter.formatRupiah(payment.getPaymentType().getPaymentFee());
         return new PaymentResDTO(
                 payment.getId().toString(),
                 payment.getPaymentCode(),
-                payment.getPaymentType().getPaymentFee(),
-                payment.getAmount(),
+                paymentFeeFormat,
+                ammountFormat,
                 payment.getPaymentType().getPaymentTypeName(),
                 payment.getPaymentStatus().getStatusCode(),
                 payment.getProductType().getProductName(),
@@ -204,5 +258,53 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
                 paymentDTOs
         );
     }
-}
 
+    private void buildAndSendEmailNotification(Payment payment, String status) {
+        if (!PaymentStatusConstant.SUCCESS.name().equals(status) &&
+                !PaymentStatusConstant.FAILED.name().equals(status)) {
+            return;
+        }
+
+        var emailPOJO = createEmailPOJO(payment, status);
+        if (emailPOJO == null) {
+            return;
+        }
+
+        var queueName = PaymentStatusConstant.SUCCESS.name().equals(status)
+                ? EMAIL_QUEUE_SUCCESS
+                : EMAIL_QUEUE_FAILED;
+
+        rabbitTemplate.convertAndSend(queueName, emailPOJO);
+    }
+
+    private EmailPOJO createEmailPOJO(Payment payment, String status) {
+        if (!PaymentStatusConstant.SUCCESS.name().equals(status) &&
+                !PaymentStatusConstant.FAILED.name().equals(status)) {
+            return null;
+        }
+
+        String message = emailMessageBuilder.buildPaymentHtml(
+                payment.getUser().getFullName(),
+                payment.getPaymentCode(),
+                payment.getCustomerCode(),
+                payment.getPaymentType().getPaymentFee(),
+                payment.getPaymentType().getPaymentTypeName(),
+                payment.getProductType().getProductName(),
+                payment.getAmount(),
+                status
+        );
+
+        return new EmailPOJO(
+                payment.getUser().getEmail(),
+                payment.getUser().getFullName(),
+                payment.getPaymentCode(),
+                status,
+                payment.getAmount().toString(),
+                payment.getPaymentType().getPaymentTypeName(),
+                payment.getProductType().getProductName(),
+                payment.getCustomerCode(),
+                payment.getPaymentType().getPaymentFee().toString(),
+                message
+        );
+    }
+}

@@ -4,12 +4,14 @@ import com.dansmultipro.ops.constant.RoleTypeConstant;
 import com.dansmultipro.ops.dto.general.CommonResDTO;
 import com.dansmultipro.ops.dto.general.InsertResDTO;
 import com.dansmultipro.ops.dto.login.LoginResDTO;
+import com.dansmultipro.ops.dto.user.ChangePasswordReqDTO;
 import com.dansmultipro.ops.dto.user.UserInsertReqDTO;
 import com.dansmultipro.ops.dto.user.UserResDTO;
 import com.dansmultipro.ops.model.User;
 import com.dansmultipro.ops.repo.RoleTypeRepo;
 import com.dansmultipro.ops.repo.UserRepo;
 import com.dansmultipro.ops.service.UserService;
+import com.dansmultipro.ops.util.AuthUtil;
 import com.dansmultipro.ops.util.JWTUtil;
 import com.dansmultipro.ops.util.UUIDUtil;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,23 +33,25 @@ public class UserServiceImpl extends BaseService implements UserService {
     private final RoleTypeRepo roleTypeRepo;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JWTUtil jwtUtil;
+    private final AuthUtil authUtil;
 
     @Value("${gateway.secret.key}")
     private String gatewaySecretKey;
     @Value("${gateway.uuid}")
     private String gatewayUUID;
 
-    public UserServiceImpl(UserRepo userRepo, RoleTypeRepo roleTypeRepo, BCryptPasswordEncoder bCryptPasswordEncoder, JWTUtil jwtUtil) {
+    public UserServiceImpl(UserRepo userRepo, RoleTypeRepo roleTypeRepo, BCryptPasswordEncoder bCryptPasswordEncoder, JWTUtil jwtUtil, AuthUtil authUtil) {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.userRepo = userRepo;
         this.roleTypeRepo = roleTypeRepo;
         this.jwtUtil = jwtUtil;
+        this.authUtil = authUtil;
     }
 
 
     @Override
     public LoginResDTO loginGateway(String secretKey) {
-        if (!secretKey.equals(gatewaySecretKey)) {
+        if (!bCryptPasswordEncoder.matches(secretKey, gatewaySecretKey)) {
             throw new BadCredentialsException("Invalid secret key");
         }
 
@@ -167,5 +171,27 @@ public class UserServiceImpl extends BaseService implements UserService {
                 user.getRoleType().getRoleCode(),
                 user.getOptLock()
         );
+    }
+
+    @Override
+    public CommonResDTO changePassword(ChangePasswordReqDTO changePasswordReq) {
+        var userId = authUtil.getLoginId();
+        if (userId == null) {
+            throw new IllegalArgumentException("User not authenticated");
+        }
+
+        var user = userRepo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (!bCryptPasswordEncoder.matches(changePasswordReq.oldPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Old password is incorrect");
+        }
+
+        var hashedNewPassword = bCryptPasswordEncoder.encode(changePasswordReq.newPassword());
+
+        user.setPassword(hashedNewPassword);
+        userRepo.save(super.update(user));
+
+        return new CommonResDTO("Password changed successfully");
     }
 }

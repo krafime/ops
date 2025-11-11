@@ -1,7 +1,7 @@
 package com.dansmultipro.ops.util;
 
 import com.dansmultipro.ops.pojo.AuthorizationPOJO;
-import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -12,10 +12,10 @@ public class AuthUtil {
 
     public UUID getLoginId() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof AuthorizationPOJO) {
+        if (auth != null && auth.getPrincipal() != null && auth.getPrincipal() instanceof AuthorizationPOJO) {
             var principal = (AuthorizationPOJO) auth.getPrincipal();
-            return UUID.fromString(principal.id());
+            return UUIDUtil.toUUID(principal.id());
         }
-        return null;
+        throw new BadCredentialsException("Bad credentials");
     }
 }
