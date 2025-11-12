@@ -16,7 +16,11 @@ public class PaymentSpecification {
     }
 
     public static Specification<Payment> byCustomerCode(String customerCode) {
-        return (root, query, cb) -> cb.equal(root.get("customerCode"), customerCode);
+        return (root, query, cb) ->
+                // Kondisi kalo bisa null, nanti auto null dan skip pas gabungin nya
+                customerCode != null ?
+                        cb.equal(root.get("customerCode"), customerCode) :
+                        null;
     }
 
     public static Specification<Payment> byStatusCode(String statusCode) {

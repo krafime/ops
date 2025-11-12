@@ -1,6 +1,5 @@
 package com.dansmultipro.ops.service;
 
-import com.dansmultipro.ops.dto.general.CommonResDTO;
 import com.dansmultipro.ops.dto.producttype.ProductTypeResDTO;
 
 import java.util.List;

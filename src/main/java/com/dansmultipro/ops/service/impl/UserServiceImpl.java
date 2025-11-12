@@ -15,6 +15,7 @@ import com.dansmultipro.ops.repo.UserRepo;
 import com.dansmultipro.ops.service.UserService;
 import com.dansmultipro.ops.util.*;
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
@@ -118,6 +119,7 @@ public class UserServiceImpl extends BaseService implements UserService {
     }
 
     @Override
+    @Transactional
     public InsertResDTO createUserCustomer(UserInsertReqDTO user) {
         var isEmailExist = userRepo.findByEmail(user.email()).isPresent();
         if (isEmailExist) {
@@ -146,6 +148,7 @@ public class UserServiceImpl extends BaseService implements UserService {
     }
 
     @Override
+    @Transactional
     public CommonResDTO activateBulkUser(List<String> userIds) {
         if (userIds == null || userIds.isEmpty()) {
             throw new IllegalArgumentException("User ID list cannot be empty");
@@ -176,6 +179,7 @@ public class UserServiceImpl extends BaseService implements UserService {
     }
 
     @Override
+    @Transactional
     public CommonResDTO changePassword(ChangePasswordReqDTO changePasswordReq) {
         var userId = authUtil.getLoginId();
         if (userId == null) {
@@ -197,17 +201,19 @@ public class UserServiceImpl extends BaseService implements UserService {
     }
 
     @Override
+    @Transactional
     public CommonResDTO forgotPassword(ForgotPasswordReqDTO forgotPasswordReq) {
-        var user = userRepo.findByEmail(forgotPasswordReq.email())
+        // Allow user to reset password even if not activated yet
+        var user = userRepo.findByEmailAndIsActiveTrue(forgotPasswordReq.email())
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + forgotPasswordReq.email()));
 
         // Generate random password
         String generatedPassword = PasswordUtil.generateRandomPassword();
         String hashedPassword = bCryptPasswordEncoder.encode(generatedPassword);
 
-        // Update password
         user.setPassword(hashedPassword);
-        userRepo.save(super.update(user));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepo.save(user);
 
         // Build HTML email content
         String htmlContent = emailMessageBuilder.buildForgotPasswordHtml(user.getFullName(), generatedPassword);
@@ -227,7 +233,7 @@ public class UserServiceImpl extends BaseService implements UserService {
 
     @RabbitListener(queues = EMAIL_QUEUE_FORGOT_PASSWORD)
     public void receiveDataForgotPassword(EmailForgotPasswordPOJO pojo) throws MessagingException {
-        emailUtil.sendEmail("Permintaan Lupa Password", pojo.message(), pojo.email());
+        emailUtil.sendEmail("Permintaan Lupa Password", pojo.getMessage(), pojo.getEmail());
     }
 
     private UserResDTO mapToDTO(User user) {

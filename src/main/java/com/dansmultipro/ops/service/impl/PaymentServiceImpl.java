@@ -14,6 +14,7 @@ import com.dansmultipro.ops.service.PaymentService;
 import com.dansmultipro.ops.specification.PaymentSpecification;
 import com.dansmultipro.ops.util.*;
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.cache.annotation.CacheEvict;
@@ -39,18 +40,15 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     private final AuthUtil authUtil;
     private final RabbitTemplate rabbitTemplate;
     private final EmailUtil emailUtil;
-    private final CurrencyFormatter currencyFormatter;
     private final EmailMessageBuilder emailMessageBuilder;
     private final DateTimeUtil dateTimeUtil;
 
 
     public PaymentServiceImpl(PaymentRepo paymentRepo, UserRepo userRepo, PaymentTypeRepo paymentTypeRepo,
                               ProductTypeRepo productTypeRepo, PaymentStatusRepo paymentStatusRepo, AuthUtil authUtil,
-                              RabbitTemplate rabbitTemplate, EmailUtil emailUtil, CurrencyFormatter currencyFormatter,
-                              EmailMessageBuilder emailMessageBuilder, DateTimeUtil dateTimeUtil) {
+                              RabbitTemplate rabbitTemplate, EmailUtil emailUtil, EmailMessageBuilder emailMessageBuilder, DateTimeUtil dateTimeUtil) {
         this.dateTimeUtil = dateTimeUtil;
         this.emailMessageBuilder = emailMessageBuilder;
-        this.currencyFormatter = currencyFormatter;
         this.emailUtil = emailUtil;
         this.rabbitTemplate = rabbitTemplate;
         this.authUtil = authUtil;
@@ -62,6 +60,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     }
 
     @Override
+    @Transactional
     @CacheEvict(value = "paymenthistory", allEntries = true)
     public InsertResDTO createPayment(PaymentCreateReqDTO paymentReq) {
         var userId = authUtil.getLoginId();
@@ -107,6 +106,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
 
     @Override
     @CacheEvict(value = "paymenthistory", allEntries = true)
+    @Transactional
     public CommonResDTO updatePaymentStatus(String paymentId, String newStatus) {
         var payment = paymentRepo.findById(UUIDUtil.toUUID(paymentId))
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
@@ -134,6 +134,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
 
     @Override
     @CacheEvict(value = "paymenthistory", allEntries = true)
+    @Transactional
     public CommonResDTO cancelPayment(String paymentId) {
         var userId = authUtil.getLoginId();
         var payment = paymentRepo.findById(UUIDUtil.toUUID(paymentId))
@@ -159,13 +160,12 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     @Override
     @Cacheable(value = "paymenthistory", key = "#customerId.toString() + ':' + #status + ':' + #page + ':' + #limit")
     public PaymentPageDTO<PaymentResDTO> getPaymentHistory(Integer page, Integer limit, String status, UUID customerId) {
-        var userId = authUtil.getLoginId();
 
         if (status != null && !status.isEmpty()) {
             return getPaymentHistoryByStatus(status, PageRequest.of(page - 1, limit));
         }
 
-        var user = userRepo.findById(userId)
+        var user = userRepo.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         var pageable = PageRequest.of(page - 1, limit);
@@ -229,13 +229,11 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
 
     private PaymentResDTO mapToDTO(Payment payment) {
         var createdAt = dateTimeUtil.formatToStandardString(payment.getCreatedAt());
-        var ammountFormat = currencyFormatter.formatRupiah(payment.getAmount());
-        var paymentFeeFormat = currencyFormatter.formatRupiah(payment.getPaymentType().getPaymentFee());
         return new PaymentResDTO(
                 payment.getId().toString(),
                 payment.getPaymentCode(),
-                paymentFeeFormat,
-                ammountFormat,
+                payment.getPaymentType().getPaymentFee().toString(),
+                payment.getAmount().toString(),
                 payment.getPaymentType().getPaymentTypeName(),
                 payment.getPaymentStatus().getStatusCode(),
                 payment.getProductType().getProductName(),

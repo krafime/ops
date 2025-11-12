@@ -16,6 +16,7 @@ public interface PaymentService {
     CommonResDTO cancelPayment(String paymentId);
 
     PaymentPageDTO<PaymentResDTO> getPaymentHistory(Integer page, Integer limit, String status, UUID userId);
+
     PaymentPageDTO<PaymentResDTO> getPaymentHistory(Integer page, Integer limit, String status);
 }
 

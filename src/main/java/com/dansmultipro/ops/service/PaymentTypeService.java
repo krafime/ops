@@ -1,6 +1,5 @@
 package com.dansmultipro.ops.service;
 
-import com.dansmultipro.ops.dto.general.CommonResDTO;
 import com.dansmultipro.ops.dto.paymenttype.PaymentTypeResDTO;
 
 import java.util.List;

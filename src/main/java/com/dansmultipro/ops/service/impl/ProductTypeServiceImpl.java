@@ -1,6 +1,5 @@
 package com.dansmultipro.ops.service.impl;
 
-import com.dansmultipro.ops.dto.general.CommonResDTO;
 import com.dansmultipro.ops.dto.producttype.ProductTypeResDTO;
 import com.dansmultipro.ops.model.ProductType;
 import com.dansmultipro.ops.repo.ProductTypeRepo;

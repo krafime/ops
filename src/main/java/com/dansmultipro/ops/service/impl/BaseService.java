@@ -4,7 +4,6 @@ package com.dansmultipro.ops.service.impl;
 import com.dansmultipro.ops.model.BaseModel;
 import com.dansmultipro.ops.util.AuthUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

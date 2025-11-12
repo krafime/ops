@@ -38,7 +38,7 @@ public class SecurityConfig {
         matchers.add(PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET,"/swagger-ui/**"));
         matchers.add(PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET,"/swagger-ui.html"));
         matchers.add(PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST,"/api/users/login"));
-        matchers.add(PathPatternRequestMatcher.withDefaults().matcher( HttpMethod.POST, "/api/users/login/gateway"));
+        matchers.add(PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/users/login/gateway"));
         matchers.add(PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/users/register"));
         matchers.add(PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/users/forgot-password"));
         return matchers;

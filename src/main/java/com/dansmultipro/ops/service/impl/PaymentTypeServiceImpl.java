@@ -1,6 +1,5 @@
 package com.dansmultipro.ops.service.impl;
 
-import com.dansmultipro.ops.dto.general.CommonResDTO;
 import com.dansmultipro.ops.dto.paymenttype.PaymentTypeResDTO;
 import com.dansmultipro.ops.model.PaymentType;
 import com.dansmultipro.ops.repo.PaymentTypeRepo;
@@ -50,8 +49,8 @@ public class PaymentTypeServiceImpl extends BaseService implements PaymentTypeSe
     private PaymentTypeResDTO mapToDTO(PaymentType paymentType) {
         return new PaymentTypeResDTO(
                 paymentType.getId(),
-                paymentType.getPaymentTypeCode(),
                 paymentType.getPaymentTypeName(),
+                paymentType.getPaymentTypeCode(),
                 paymentType.getPaymentFee(),
                 paymentType.getActive()
         );
