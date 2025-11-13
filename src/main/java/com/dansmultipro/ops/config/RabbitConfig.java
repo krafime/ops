@@ -1,10 +1,15 @@
 package com.dansmultipro.ops.config;
 
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.config.RetryInterceptorBuilder;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.retry.RejectAndDontRequeueRecoverer;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 
 @Configuration
 public class RabbitConfig {
@@ -16,10 +21,10 @@ public class RabbitConfig {
     public static final String EMAIL_QUEUE_FORGOT_PASSWORD = "email.notification.forgot.password.queue";
     public static final String EMAIL_RK_FORGOT_PASSWORD = "email.notification.forgot.password.key";
 
-//    // Dead Letter Exchange and Queue
-//    public static final String EMAIL_EX_DLQ = "email.notification.dlq.exchange";
-//    public static final String EMAIL_QUEUE_DLQ = "email.notification.dlq.queue";
-//    public static final String EMAIL_RK_DLQ = "email.notification.dlq.key";
+    // Dead Letter Exchange and Queue
+    public static final String EMAIL_EX_DLQ = "email.notification.dlq.exchange";
+    public static final String EMAIL_QUEUE_DLQ = "email.notification.dlq.queue";
+    public static final String EMAIL_RK_DLQ = "email.notification.dlq.key";
 
     // Main Exchange
     @Bean
@@ -27,31 +32,31 @@ public class RabbitConfig {
         return new DirectExchange(EMAIL_EX);
     }
 
-//    // DLX (Dead Letter Exchange)
-//    @Bean
-//    public DirectExchange dlxExchange() {
-//        return new DirectExchange(EMAIL_EX_DLQ, true, false);
-//    }
-//
-//    // DLQ (Dead Letter Queue)
-//    @Bean
-//    public Queue dlxQueue() {
-//        return QueueBuilder.durable(EMAIL_QUEUE_DLQ).build();
-//    }
-//
-//    @Bean
-//    public Binding dlxBinding() {
-//        return BindingBuilder.bind(dlxQueue())
-//                .to(dlxExchange())
-//                .with(EMAIL_RK_DLQ);
-//    }
+    // DLX (Dead Letter Exchange)
+    @Bean
+    public DirectExchange dlxExchange() {
+        return new DirectExchange(EMAIL_EX_DLQ, true, false);
+    }
+
+    // DLQ (Dead Letter Queue)
+    @Bean
+    public Queue dlxQueue() {
+        return QueueBuilder.durable(EMAIL_QUEUE_DLQ).build();
+    }
+
+    @Bean
+    public Binding dlxBinding() {
+        return BindingBuilder.bind(dlxQueue())
+                .to(dlxExchange())
+                .with(EMAIL_RK_DLQ);
+    }
 
     // Email queues dengan DLX configuration
     @Bean
     public Queue emailQueueSuccess() {
         return QueueBuilder.durable(EMAIL_QUEUE_SUCCESS)
-//                .deadLetterExchange(EMAIL_EX_DLQ)
-//                .deadLetterRoutingKey(EMAIL_RK_DLQ)
+                .deadLetterExchange(EMAIL_EX_DLQ)
+                .deadLetterRoutingKey(EMAIL_RK_DLQ)
                 .build();
     }
 
@@ -65,8 +70,8 @@ public class RabbitConfig {
     @Bean
     public Queue emailQueueFailed() {
         return QueueBuilder.durable(EMAIL_QUEUE_FAILED)
-//                .deadLetterExchange(EMAIL_EX_DLQ)
-//                .deadLetterRoutingKey(EMAIL_RK_DLQ)
+                .deadLetterExchange(EMAIL_EX_DLQ)
+                .deadLetterRoutingKey(EMAIL_RK_DLQ)
                 .build();
     }
 
@@ -80,8 +85,8 @@ public class RabbitConfig {
     @Bean
     public Queue emailQueueForgotPassword() {
         return QueueBuilder.durable(EMAIL_QUEUE_FORGOT_PASSWORD)
-//                .deadLetterExchange(EMAIL_EX_DLQ)
-//                .deadLetterRoutingKey(EMAIL_RK_DLQ)
+                .deadLetterExchange(EMAIL_EX_DLQ)
+                .deadLetterRoutingKey(EMAIL_RK_DLQ)
                 .build();
     }
 
@@ -97,16 +102,32 @@ public class RabbitConfig {
         return new Jackson2JsonMessageConverter();
     }
 
-//    @Bean
-//    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
-//            ConnectionFactory connectionFactory) {
-//        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
-//        factory.setConnectionFactory(connectionFactory);
-//        factory.setAcknowledgeMode(AcknowledgeMode.AUTO);
-//        factory.setAdviceChain(
-//                RetryInterceptorBuilder.stateless().maxAttempts(3).recoverer(new RejectAndDontRequeueRecoverer()).build()
-//        );
-//        return factory;
-//    }
+    @Bean
+    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
+            ConnectionFactory connectionFactory) {
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+        factory.setConnectionFactory(connectionFactory);
+        factory.setMessageConverter(jsonMessageConverter());
+        factory.setAcknowledgeMode(AcknowledgeMode.AUTO);
+
+        // IMPORTANT: Don't requeue rejected messages, let them go to DLX instead
+        factory.setDefaultRequeueRejected(false);
+
+        // Setup exponential backoff retry policy
+        ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
+        backOffPolicy.setInitialInterval(1000);      // Start with 1 second
+        backOffPolicy.setMultiplier(2.0);            // Double each retry
+        backOffPolicy.setMaxInterval(10000);         // Max 10 seconds
+
+        factory.setAdviceChain(
+                RetryInterceptorBuilder.stateless()
+                        .maxAttempts(4)                               // 1 initial + 3 retries
+                        .backOffPolicy(backOffPolicy)
+                        .recoverer(new RejectAndDontRequeueRecoverer())
+                        .build()
+        );
+
+        return factory;
+    }
 }
 

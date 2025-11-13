@@ -4,7 +4,6 @@ import com.dansmultipro.ops.dto.paymenttype.PaymentTypeResDTO;
 import com.dansmultipro.ops.model.PaymentType;
 import com.dansmultipro.ops.repo.PaymentTypeRepo;
 import com.dansmultipro.ops.service.PaymentTypeService;
-import com.dansmultipro.ops.util.UUIDUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,7 +30,7 @@ public class PaymentTypeServiceImpl extends BaseService implements PaymentTypeSe
 
     @Override
     public PaymentTypeResDTO getPaymentTypeById(String id) {
-        var paymentId = UUIDUtil.toUUID(id);
+        var paymentId = toUUID(id);
         var paymentType = paymentTypeRepo.findById(paymentId)
                 .orElseThrow(() -> new IllegalArgumentException("Payment Type not found"));
 

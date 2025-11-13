@@ -4,16 +4,9 @@ import java.util.UUID;
 
 public class UUIDUtil {
 
-    /**
-     * Convert String to UUID
-     *
-     * @param uuidString String representation of UUID
-     * @return UUID object
-     * @throws IllegalArgumentException if string is not valid UUID format
-     */
     public static UUID toUUID(String uuidString) {
         if (uuidString == null || uuidString.isEmpty()) {
-            return null;
+            throw new IllegalArgumentException("UUID string cannot be null or empty");
         }
         try {
             return UUID.fromString(uuidString);
@@ -22,12 +15,6 @@ public class UUIDUtil {
         }
     }
 
-    /**
-     * Convert UUID to String
-     *
-     * @param uuid UUID object
-     * @return String representation of UUID
-     */
     public static String toString(UUID uuid) {
         if (uuid == null) {
             return null;

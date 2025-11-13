@@ -4,7 +4,6 @@ import com.dansmultipro.ops.dto.producttype.ProductTypeResDTO;
 import com.dansmultipro.ops.model.ProductType;
 import com.dansmultipro.ops.repo.ProductTypeRepo;
 import com.dansmultipro.ops.service.ProductTypeService;
-import com.dansmultipro.ops.util.UUIDUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,7 +29,7 @@ public class ProductTypeServiceImpl extends BaseService implements ProductTypeSe
 
     @Override
     public ProductTypeResDTO getProductTypeById(String id) {
-        var productId = UUIDUtil.toUUID(id);
+        var productId = toUUID(id);
         var productType = productTypeRepo.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product type not found"));
 

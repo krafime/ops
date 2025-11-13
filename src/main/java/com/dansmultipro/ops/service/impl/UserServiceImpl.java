@@ -92,7 +92,7 @@ public class UserServiceImpl extends BaseService implements UserService {
         if (isActive != null) {
             return allUsers.stream()
                     .filter(dto -> {
-                        var user = userRepo.findById(UUIDUtil.toUUID(dto.getId())).orElse(null);
+                        var user = userRepo.findById(toUUID(dto.getId())).orElse(null);
                         return user != null && user.getActive().equals(isActive);
                     })
                     .toList();
@@ -103,7 +103,7 @@ public class UserServiceImpl extends BaseService implements UserService {
 
     @Override
     public UserResDTO getUserById(String id) {
-        var userId = UUIDUtil.toUUID(id);
+        var userId = toUUID(id);
         var user = userRepo.findById(userId).orElseThrow(
                 () -> new IllegalArgumentException("User not found")
         );
@@ -156,7 +156,7 @@ public class UserServiceImpl extends BaseService implements UserService {
 
         var users = userIds.stream()
                 .map(userId -> {
-                    var id = UUIDUtil.toUUID(userId);
+                    var id = toUUID(userId);
                     return userRepo.findByIdAndIsActive(id, false)
                             .orElseThrow(() -> new IllegalArgumentException("User not found or already active: " + userId));
                 })

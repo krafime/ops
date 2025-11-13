@@ -2,88 +2,20 @@ package com.dansmultipro.ops.integration;
 
 import com.dansmultipro.ops.constant.ProductTypeConstant;
 import com.dansmultipro.ops.dto.producttype.ProductTypeResDTO;
-import com.dansmultipro.ops.model.ProductType;
-import com.dansmultipro.ops.repo.ProductTypeRepo;
 import com.dansmultipro.ops.service.ProductTypeService;
-import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
-@SpringBootTest
-@Transactional
-public class ProductTypeServiceIntegrationTest {
+public class ProductTypeServiceIntegrationTest extends AbstractServiceIntegrationTest {
 
-    private static final UUID SYSTEM_ADMIN_UUID = UUID.fromString("792b3990-9315-405a-ba5a-da07770c1edf");
-    @Autowired
-    private ProductTypeRepo productTypeRepo;
     @Autowired
     private ProductTypeService productTypeService;
-
-    @BeforeEach
-    void setUp() {
-        // Clear existing data
-        productTypeRepo.deleteAll();
-
-        // Create product types sesuai dengan database-script.sql menggunakan ProductTypeConstant
-        // 1. PLN
-        ProductType productTypePLN = new ProductType();
-        productTypePLN.setId(UUID.randomUUID());
-        productTypePLN.setProductCode(ProductTypeConstant.PLN.name());
-        productTypePLN.setProductName(ProductTypeConstant.PLN.getProductName());
-        productTypePLN.setActive(true);
-        productTypePLN.setCreatedAt(LocalDateTime.now());
-        productTypePLN.setCreatedBy(SYSTEM_ADMIN_UUID);
-        productTypeRepo.save(productTypePLN);
-
-        // 2. PULSA
-        ProductType productTypePULSA = new ProductType();
-        productTypePULSA.setId(UUID.randomUUID());
-        productTypePULSA.setProductCode(ProductTypeConstant.PULSA.name());
-        productTypePULSA.setProductName(ProductTypeConstant.PULSA.getProductName());
-        productTypePULSA.setActive(true);
-        productTypePULSA.setCreatedAt(LocalDateTime.now());
-        productTypePULSA.setCreatedBy(SYSTEM_ADMIN_UUID);
-        productTypeRepo.save(productTypePULSA);
-
-        // 3. INTERNET
-        ProductType productTypeINTERNET = new ProductType();
-        productTypeINTERNET.setId(UUID.randomUUID());
-        productTypeINTERNET.setProductCode(ProductTypeConstant.INTERNET.name());
-        productTypeINTERNET.setProductName(ProductTypeConstant.INTERNET.getProductName());
-        productTypeINTERNET.setActive(true);
-        productTypeINTERNET.setCreatedAt(LocalDateTime.now());
-        productTypeINTERNET.setCreatedBy(SYSTEM_ADMIN_UUID);
-        productTypeRepo.save(productTypeINTERNET);
-
-        // 4. BPJS
-        ProductType productTypeBPJS = new ProductType();
-        productTypeBPJS.setId(UUID.randomUUID());
-        productTypeBPJS.setProductCode(ProductTypeConstant.BPJS.name());
-        productTypeBPJS.setProductName(ProductTypeConstant.BPJS.getProductName());
-        productTypeBPJS.setActive(true);
-        productTypeBPJS.setCreatedAt(LocalDateTime.now());
-        productTypeBPJS.setCreatedBy(SYSTEM_ADMIN_UUID);
-        productTypeRepo.save(productTypeBPJS);
-
-        // 5. PDAM
-        ProductType productTypePDAM = new ProductType();
-        productTypePDAM.setId(UUID.randomUUID());
-        productTypePDAM.setProductCode(ProductTypeConstant.PDAM.name());
-        productTypePDAM.setProductName(ProductTypeConstant.PDAM.getProductName());
-        productTypePDAM.setActive(true);
-        productTypePDAM.setCreatedAt(LocalDateTime.now());
-        productTypePDAM.setCreatedBy(SYSTEM_ADMIN_UUID);
-        productTypeRepo.save(productTypePDAM);
-    }
 
     @Test
     void getAllProductTypesTest() {
@@ -131,6 +63,20 @@ public class ProductTypeServiceIntegrationTest {
     }
 
     @Test
+    void getProductTypeByIdInvalidUUIDTest() {
+        assertThatThrownBy(() -> productTypeService.getProductTypeById("invalid-uuid-string"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Invalid UUID format: invalid-uuid-string");
+    }
+
+    @Test
+    void getProductTypeByIdNullTest() {
+        assertThatThrownBy(() -> productTypeService.getProductTypeById(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("UUID string cannot be null or empty");
+    }
+
+    @Test
     void getProductTypeByCodeTest() {
         // Test dengan code yang ada di database
         ProductTypeResDTO plnProductType = productTypeService.getProductTypeByCode(ProductTypeConstant.PLN.name());
@@ -143,6 +89,18 @@ public class ProductTypeServiceIntegrationTest {
     @Test
     void getProductTypeByCodeNotFoundTest() {
         assertThatThrownBy(() -> productTypeService.getProductTypeByCode("INVALID_CODE_XYZ"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void getProductTypeByCodeNullTest() {
+        assertThatThrownBy(() -> productTypeService.getProductTypeByCode(null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void getProductTypeByCodeEmptyTest() {
+        assertThatThrownBy(() -> productTypeService.getProductTypeByCode(""))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -182,4 +140,3 @@ public class ProductTypeServiceIntegrationTest {
         assertThat(pdamProductType.productName()).isEqualTo(ProductTypeConstant.PDAM.getProductName());
     }
 }
-

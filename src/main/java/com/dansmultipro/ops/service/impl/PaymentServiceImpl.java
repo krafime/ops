@@ -67,10 +67,10 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
         var user = userRepo.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        var paymentType = paymentTypeRepo.findById(UUIDUtil.toUUID(paymentReq.paymentTypeId()))
+        var paymentType = paymentTypeRepo.findById(toUUID(paymentReq.paymentTypeId()))
                 .orElseThrow(() -> new IllegalArgumentException("Payment Type not found"));
 
-        var productType = productTypeRepo.findById(UUIDUtil.toUUID(paymentReq.productTypeId()))
+        var productType = productTypeRepo.findById(toUUID(paymentReq.productTypeId()))
                 .orElseThrow(() -> new IllegalArgumentException("Product Type not found"));
 
         var processingStatus = paymentStatusRepo.findByStatusCode(PaymentStatusConstant.PROCESSING.name())
@@ -108,7 +108,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     @CacheEvict(value = "paymenthistory", allEntries = true)
     @Transactional
     public CommonResDTO updatePaymentStatus(String paymentId, String newStatus) {
-        var payment = paymentRepo.findById(UUIDUtil.toUUID(paymentId))
+        var payment = paymentRepo.findById(toUUID(paymentId))
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
 
         if (!PaymentStatusConstant.PROCESSING.name().equals(payment.getPaymentStatus().getStatusCode())) {
@@ -137,7 +137,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     @Transactional
     public CommonResDTO cancelPayment(String paymentId) {
         var userId = authUtil.getLoginId();
-        var payment = paymentRepo.findById(UUIDUtil.toUUID(paymentId))
+        var payment = paymentRepo.findById(toUUID(paymentId))
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
 
         if (!payment.getUser().getId().equals(userId)) {

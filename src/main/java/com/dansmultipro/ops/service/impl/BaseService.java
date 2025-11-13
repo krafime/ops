@@ -3,6 +3,7 @@ package com.dansmultipro.ops.service.impl;
 
 import com.dansmultipro.ops.model.BaseModel;
 import com.dansmultipro.ops.util.AuthUtil;
+import com.dansmultipro.ops.util.UUIDUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
@@ -52,5 +53,13 @@ public abstract class BaseService {
         data.setUpdatedAt(LocalDateTime.now());
         data.setUpdatedBy(authUtil.getLoginId());
         return data;
+    }
+
+    protected UUID toUUID(String id) {
+        return UUIDUtil.toUUID(id);
+    }
+
+    protected String toString(UUID id) {
+        return UUIDUtil.toString(id);
     }
 }
