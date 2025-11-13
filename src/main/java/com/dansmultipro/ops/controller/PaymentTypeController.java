@@ -29,14 +29,14 @@ public class PaymentTypeController {
 
     @GetMapping("{id}")
     @Operation(summary = "Get Payment Type By ID", description = "Mengambil detail jenis pembayaran berdasarkan ID")
-    public ResponseEntity<PaymentTypeResDTO> getPaymentTypeById(String id) {
+    public ResponseEntity<PaymentTypeResDTO> getPaymentTypeById(@PathVariable String id) {
         PaymentTypeResDTO paymentType = paymentTypeService.getPaymentTypeById(id);
         return new ResponseEntity<>(paymentType, HttpStatus.OK);
     }
 
     @GetMapping("/code/{code}")
     @Operation(summary = "Get Payment Type By Code", description = "Mengambil detail jenis pembayaran berdasarkan kode")
-    public ResponseEntity<PaymentTypeResDTO> getPaymentTypeByCode(String code) {
+    public ResponseEntity<PaymentTypeResDTO> getPaymentTypeByCode(@PathVariable String code) {
         PaymentTypeResDTO paymentType = paymentTypeService.getPaymentTypeByCode(code);
         return new ResponseEntity<>(paymentType, HttpStatus.OK);
     }

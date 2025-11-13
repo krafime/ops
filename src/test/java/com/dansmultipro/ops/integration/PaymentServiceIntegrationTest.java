@@ -61,6 +61,32 @@ public class PaymentServiceIntegrationTest extends AbstractServiceIntegrationTes
     }
 
     @Test
+    void createPaymentWithSameCustomerButCustomerCodeSameTest() {
+        // Mock authentication for payment creation
+        Mockito.when(authUtil.getLoginId()).thenReturn(customerUser.getId());
+
+        PaymentCreateReqDTO paymentReq1 = new PaymentCreateReqDTO(
+                new BigDecimal("50000.00"),
+                defaultPaymentType.getId().toString(),
+                defaultProductType.getId().toString(),
+                "CUST100"
+        );
+
+        InsertResDTO result1 = paymentService.createPayment(paymentReq1);
+        assertThat(result1).isNotNull();
+
+        PaymentCreateReqDTO paymentReq2 = new PaymentCreateReqDTO(
+                new BigDecimal("75000.00"),
+                defaultPaymentType.getId().toString(),
+                defaultProductType.getId().toString(),
+                "CUST100" // same customer code
+        );
+
+        assertThatThrownBy(() -> paymentService.createPayment(paymentReq2))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void createPaymentInvalidProductTypeTest() {
         // Mock authentication for payment creation
         Mockito.when(authUtil.getLoginId()).thenReturn(customerUser.getId());
@@ -88,8 +114,6 @@ public class PaymentServiceIntegrationTest extends AbstractServiceIntegrationTes
                 "CUST001"
         );
 
-        // Depending on implementation, might throw exception or allow
-        // For now, assume it allows, but we can add validation later
         InsertResDTO result = paymentService.createPayment(paymentReq);
         assertThat(result).isNotNull();
     }

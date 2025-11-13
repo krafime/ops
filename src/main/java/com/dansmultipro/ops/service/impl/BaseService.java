@@ -41,10 +41,9 @@ public abstract class BaseService {
         return data;
     }
 
-    protected <T extends BaseModel> T delete(T data) {
-        data.setActive(false);
+    protected <T extends BaseModel> T update(T data, UUID systemId) {
         data.setUpdatedAt(LocalDateTime.now());
-        data.setUpdatedBy(authUtil.getLoginId());
+        data.setUpdatedBy(systemId);
         return data;
     }
 
@@ -57,9 +56,5 @@ public abstract class BaseService {
 
     protected UUID toUUID(String id) {
         return UUIDUtil.toUUID(id);
-    }
-
-    protected String toString(UUID id) {
-        return UUIDUtil.toString(id);
     }
 }

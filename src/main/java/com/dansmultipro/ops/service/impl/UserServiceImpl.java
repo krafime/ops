@@ -207,13 +207,16 @@ public class UserServiceImpl extends BaseService implements UserService {
         var user = userRepo.findByEmailAndIsActiveTrue(forgotPasswordReq.email())
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + forgotPasswordReq.email()));
 
+        var systemUser = userRepo.findByRoleTypeRoleCode(RoleTypeConstant.SYS.name()).orElseThrow(
+                () -> new IllegalArgumentException("System user not found")
+        );
+
         // Generate random password
         String generatedPassword = PasswordUtil.generateRandomPassword();
         String hashedPassword = bCryptPasswordEncoder.encode(generatedPassword);
 
         user.setPassword(hashedPassword);
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepo.save(user);
+        userRepo.save(super.update(user, systemUser.getId()));
 
         // Build HTML email content
         String htmlContent = emailMessageBuilder.buildForgotPasswordHtml(user.getFullName(), generatedPassword);

@@ -14,12 +14,5 @@ public class UUIDUtil {
             throw new IllegalArgumentException("Invalid UUID format: " + uuidString);
         }
     }
-
-    public static String toString(UUID uuid) {
-        if (uuid == null) {
-            return null;
-        }
-        return uuid.toString();
-    }
 }
 

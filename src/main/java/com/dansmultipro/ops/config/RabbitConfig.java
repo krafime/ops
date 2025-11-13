@@ -121,7 +121,7 @@ public class RabbitConfig {
 
         factory.setAdviceChain(
                 RetryInterceptorBuilder.stateless()
-                        .maxAttempts(4)                               // 1 initial + 3 retries
+                        .maxAttempts(3)
                         .backOffPolicy(backOffPolicy)
                         .recoverer(new RejectAndDontRequeueRecoverer())
                         .build()

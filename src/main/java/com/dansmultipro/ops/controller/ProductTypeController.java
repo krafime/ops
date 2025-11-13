@@ -6,10 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -32,14 +29,14 @@ public class ProductTypeController {
 
     @GetMapping("{id}")
     @Operation(summary = "Get product type by ID", description = "Mengambil product type berdasarkan ID")
-    public ResponseEntity<ProductTypeResDTO> getProductTypeById(@RequestParam String id) {
+    public ResponseEntity<ProductTypeResDTO> getProductTypeById(@PathVariable String id) {
         ProductTypeResDTO productType = productTypeService.getProductTypeById(id);
         return new ResponseEntity<>(productType, HttpStatus.OK);
     }
 
     @GetMapping("/code/{code}")
     @Operation(summary = "Get product type by code", description = "Mengambil product type berdasarkan kode produk (e.g., EBOOK, PRINTED, COMBO)")
-    public ResponseEntity<ProductTypeResDTO> getProductTypeByCode(@RequestParam String code) {
+    public ResponseEntity<ProductTypeResDTO> getProductTypeByCode(@PathVariable String code) {
         ProductTypeResDTO productType = productTypeService.getProductTypeByCode(code);
         return new ResponseEntity<>(productType, HttpStatus.OK);
     }
