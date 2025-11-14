@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public abstract class BaseService {
 
-    private AuthUtil authUtil;
+    protected AuthUtil authUtil;
 
     @Autowired
     public void setAuthUtil(AuthUtil authUtil) {

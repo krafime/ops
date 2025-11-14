@@ -38,17 +38,10 @@ public class RoleTypeServiceIntegrationTest extends AbstractServiceIntegrationTe
 
     @Test
     void getRoleTypeByIdTest() {
-        // Ambil semua role types, ambil yang pertama untuk test
-        List<RoleTypeResDTO> roleTypes = roleTypeService.getAllRoleTypes(null);
-
-        assertThat(roleTypes).isNotNull();
-        assertThat(roleTypes.size()).isGreaterThan(0);
-
-        UUID roleTypeId = roleTypes.get(0).id();
-        RoleTypeResDTO roleTypeFound = roleTypeService.getRoleTypeById(roleTypeId.toString());
+        RoleTypeResDTO roleTypeFound = roleTypeService.getRoleTypeById(customerRole.getId().toString());
 
         assertThat(roleTypeFound).isNotNull();
-        assertThat(roleTypeFound.id()).isEqualTo(roleTypeId);
+        assertThat(roleTypeFound.id()).isEqualTo(customerRole.getId());
         assertThat(roleTypeFound.roleCode()).isNotBlank();
         assertThat(roleTypeFound.roleName()).isNotBlank();
     }
@@ -57,22 +50,15 @@ public class RoleTypeServiceIntegrationTest extends AbstractServiceIntegrationTe
     void getRoleTypeByIdNotFoundTest() {
         assertThatThrownBy(() -> roleTypeService.getRoleTypeById(UUID.randomUUID().toString()))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Role Type not found");  // ← Sesuaikan dengan actual message
+                .hasMessage("Role Type not found");
     }
 
     @Test
     void getRoleTypeByCodeTest() {
-        // Ambil semua role types, ambil yang pertama untuk test
-        List<RoleTypeResDTO> roleTypes = roleTypeService.getAllRoleTypes(null);
-
-        assertThat(roleTypes).isNotNull();
-        assertThat(roleTypes.size()).isGreaterThan(0);
-
-        String roleCode = roleTypes.get(0).roleCode();
-        RoleTypeResDTO roleTypeFound = roleTypeService.getRoleTypeByCode(roleCode);
+        RoleTypeResDTO roleTypeFound = roleTypeService.getRoleTypeByCode(customerRole.getRoleCode());
 
         assertThat(roleTypeFound).isNotNull();
-        assertThat(roleTypeFound.roleCode()).isEqualTo(roleCode);
+        assertThat(roleTypeFound.roleCode()).isEqualTo(customerRole.getRoleCode());
         assertThat(roleTypeFound.roleName()).isNotBlank();
     }
 

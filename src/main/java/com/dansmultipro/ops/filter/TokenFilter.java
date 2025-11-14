@@ -1,7 +1,6 @@
 package com.dansmultipro.ops.filter;
 
 import com.dansmultipro.ops.pojo.AuthorizationPOJO;
-import com.dansmultipro.ops.service.UserService;
 import com.dansmultipro.ops.util.JWTUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -23,10 +22,8 @@ public class TokenFilter extends OncePerRequestFilter {
 
     private final List<RequestMatcher> antMatchers;
     private final JWTUtil jwtUtil;
-    private final UserService userService;
 
-    public TokenFilter(List<RequestMatcher> antMatchers, JWTUtil jwtUtil, UserService userService) {
-        this.userService = userService;
+    public TokenFilter(List<RequestMatcher> antMatchers, JWTUtil jwtUtil) {
         this.antMatchers = antMatchers;
         this.jwtUtil = jwtUtil;
 

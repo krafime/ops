@@ -53,7 +53,7 @@ VALUES (
     0
 ),
 (
-'792b3990-9315-405a-ba5a-da07770c1edf'::uuid,)
+'792b3990-9315-405a-ba5a-da07770c1edf'::uuid,
     'krafime+1@gmail.com',
     '$2a$12$BPbXTA2qgaFFCZlWInrYyODjuc.PX2XUBTMyWwbr/B8tG2/wvVSny',
     'System Admin',

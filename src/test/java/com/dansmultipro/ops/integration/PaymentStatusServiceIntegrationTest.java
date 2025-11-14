@@ -40,17 +40,10 @@ public class PaymentStatusServiceIntegrationTest extends AbstractServiceIntegrat
 
     @Test
     void getPaymentStatusByIdTest() {
-        // Ambil semua payment statuses, ambil yang pertama untuk test
-        List<PaymentStatusResDTO> paymentStatuses = paymentStatusService.getAllPaymentStatuses(null);
-
-        assertThat(paymentStatuses).isNotNull();
-        assertThat(paymentStatuses.size()).isGreaterThan(0);
-
-        UUID statusId = paymentStatuses.get(0).id();
-        PaymentStatusResDTO statusFound = paymentStatusService.getPaymentStatusById(statusId.toString());
+        PaymentStatusResDTO statusFound = paymentStatusService.getPaymentStatusById(processingStatus.getId().toString());
 
         assertThat(statusFound).isNotNull();
-        assertThat(statusFound.id()).isEqualTo(statusId);
+        assertThat(statusFound.id()).isEqualTo(processingStatus.getId());
         assertThat(statusFound.statusCode()).isNotBlank();
         assertThat(statusFound.statusName()).isNotBlank();
     }

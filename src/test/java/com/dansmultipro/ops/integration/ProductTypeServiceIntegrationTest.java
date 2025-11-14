@@ -40,17 +40,10 @@ public class ProductTypeServiceIntegrationTest extends AbstractServiceIntegratio
 
     @Test
     void getProductTypeByIdTest() {
-        // Ambil semua product types, ambil yang pertama untuk test
-        List<ProductTypeResDTO> productTypes = productTypeService.getAllProductTypes(null);
-
-        assertThat(productTypes).isNotNull();
-        assertThat(productTypes.size()).isGreaterThan(0);
-
-        UUID productTypeId = productTypes.get(0).id();
-        ProductTypeResDTO productTypeFound = productTypeService.getProductTypeById(productTypeId.toString());
+        ProductTypeResDTO productTypeFound = productTypeService.getProductTypeById(defaultProductType.getId().toString());
 
         assertThat(productTypeFound).isNotNull();
-        assertThat(productTypeFound.id()).isEqualTo(productTypeId);
+        assertThat(productTypeFound.id()).isEqualTo(defaultProductType.getId());
         assertThat(productTypeFound.productCode()).isNotBlank();
         assertThat(productTypeFound.productName()).isNotBlank();
     }

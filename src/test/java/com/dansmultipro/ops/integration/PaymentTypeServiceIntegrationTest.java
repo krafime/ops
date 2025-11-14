@@ -41,17 +41,10 @@ public class PaymentTypeServiceIntegrationTest extends AbstractServiceIntegratio
 
     @Test
     void getPaymentTypeByIdTest() {
-        // Ambil semua payment types, ambil yang pertama untuk test
-        List<PaymentTypeResDTO> paymentTypes = paymentTypeService.getAllPaymentTypes(null);
-
-        assertThat(paymentTypes).isNotNull();
-        assertThat(paymentTypes.size()).isGreaterThan(0);
-
-        UUID paymentTypeId = paymentTypes.get(0).id();
-        PaymentTypeResDTO paymentTypeFound = paymentTypeService.getPaymentTypeById(paymentTypeId.toString());
+        PaymentTypeResDTO paymentTypeFound = paymentTypeService.getPaymentTypeById(defaultPaymentType.getId().toString());
 
         assertThat(paymentTypeFound).isNotNull();
-        assertThat(paymentTypeFound.id()).isEqualTo(paymentTypeId);
+        assertThat(paymentTypeFound.id()).isEqualTo(defaultPaymentType.getId());
         assertThat(paymentTypeFound.paymentCode()).isNotBlank();
         assertThat(paymentTypeFound.paymentName()).isNotBlank();
     }

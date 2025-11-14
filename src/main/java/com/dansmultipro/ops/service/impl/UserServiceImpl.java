@@ -13,7 +13,10 @@ import com.dansmultipro.ops.pojo.EmailForgotPasswordPOJO;
 import com.dansmultipro.ops.repo.RoleTypeRepo;
 import com.dansmultipro.ops.repo.UserRepo;
 import com.dansmultipro.ops.service.UserService;
-import com.dansmultipro.ops.util.*;
+import com.dansmultipro.ops.util.EmailMessageBuilder;
+import com.dansmultipro.ops.util.EmailUtil;
+import com.dansmultipro.ops.util.JWTUtil;
+import com.dansmultipro.ops.util.PasswordUtil;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -39,7 +42,6 @@ public class UserServiceImpl extends BaseService implements UserService {
     private final RoleTypeRepo roleTypeRepo;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JWTUtil jwtUtil;
-    private final AuthUtil authUtil;
     private final EmailMessageBuilder emailMessageBuilder;
     private final RabbitTemplate rabbitTemplate;
     private final EmailUtil emailUtil;
@@ -50,14 +52,12 @@ public class UserServiceImpl extends BaseService implements UserService {
     private String gatewayUUID;
 
     public UserServiceImpl(UserRepo userRepo, RoleTypeRepo roleTypeRepo, BCryptPasswordEncoder bCryptPasswordEncoder,
-                           JWTUtil jwtUtil, AuthUtil authUtil, EmailMessageBuilder emailMessageBuilder,
-                           RabbitTemplate rabbitTemplate, EmailUtil emailUtil) {
+                           JWTUtil jwtUtil, EmailMessageBuilder emailMessageBuilder, RabbitTemplate rabbitTemplate, EmailUtil emailUtil) {
         this.emailUtil = emailUtil;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.userRepo = userRepo;
         this.roleTypeRepo = roleTypeRepo;
         this.jwtUtil = jwtUtil;
-        this.authUtil = authUtil;
         this.emailMessageBuilder = emailMessageBuilder;
         this.rabbitTemplate = rabbitTemplate;
     }

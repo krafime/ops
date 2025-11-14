@@ -12,7 +12,10 @@ import com.dansmultipro.ops.pojo.EmailStatusPOJO;
 import com.dansmultipro.ops.repo.*;
 import com.dansmultipro.ops.service.PaymentService;
 import com.dansmultipro.ops.specification.PaymentSpecification;
-import com.dansmultipro.ops.util.*;
+import com.dansmultipro.ops.util.DateTimeUtil;
+import com.dansmultipro.ops.util.EmailMessageBuilder;
+import com.dansmultipro.ops.util.EmailUtil;
+import com.dansmultipro.ops.util.PaymentCodeGenerator;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -23,8 +26,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 import static com.dansmultipro.ops.config.RabbitConfig.EMAIL_QUEUE_FAILED;
 import static com.dansmultipro.ops.config.RabbitConfig.EMAIL_QUEUE_SUCCESS;
@@ -37,7 +38,6 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     private final PaymentTypeRepo paymentTypeRepo;
     private final ProductTypeRepo productTypeRepo;
     private final PaymentStatusRepo paymentStatusRepo;
-    private final AuthUtil authUtil;
     private final RabbitTemplate rabbitTemplate;
     private final EmailUtil emailUtil;
     private final EmailMessageBuilder emailMessageBuilder;
@@ -45,13 +45,12 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
 
 
     public PaymentServiceImpl(PaymentRepo paymentRepo, UserRepo userRepo, PaymentTypeRepo paymentTypeRepo,
-                              ProductTypeRepo productTypeRepo, PaymentStatusRepo paymentStatusRepo, AuthUtil authUtil,
-                              RabbitTemplate rabbitTemplate, EmailUtil emailUtil, EmailMessageBuilder emailMessageBuilder, DateTimeUtil dateTimeUtil) {
+                              ProductTypeRepo productTypeRepo, PaymentStatusRepo paymentStatusRepo, RabbitTemplate rabbitTemplate,
+                              EmailUtil emailUtil, EmailMessageBuilder emailMessageBuilder, DateTimeUtil dateTimeUtil) {
         this.dateTimeUtil = dateTimeUtil;
         this.emailMessageBuilder = emailMessageBuilder;
         this.emailUtil = emailUtil;
         this.rabbitTemplate = rabbitTemplate;
-        this.authUtil = authUtil;
         this.paymentRepo = paymentRepo;
         this.userRepo = userRepo;
         this.paymentTypeRepo = paymentTypeRepo;
@@ -158,17 +157,19 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     }
 
     @Override
-    @Cacheable(value = "paymenthistory", key = "#customerId.toString() + ':' + #status + ':' + #page + ':' + #limit")
-    public PaymentPageDTO<PaymentResDTO> getPaymentHistory(Integer page, Integer limit, String status, UUID customerId) {
+    @Cacheable(value = "paymenthistory", key = "#customerId + ':' + #status + ':' + #page + ':' + #limit")
+    public PaymentPageDTO<PaymentResDTO> getPaymentHistory(Integer page, Integer limit, String status, String customerId) {
+        var pageable = PageRequest.of(page - 1, limit);
 
         if (status != null && !status.isEmpty()) {
-            return getPaymentHistoryByStatus(status, PageRequest.of(page - 1, limit));
+            return getPaymentHistoryByStatus(status, pageable, page, limit);
         }
 
-        var user = userRepo.findById(customerId)
+        var custId = toUUID(customerId);
+
+        var user = userRepo.findById(custId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        var pageable = PageRequest.of(page - 1, limit);
 
         // Use Specification to filter by user
         var payments = paymentRepo.findAll(PaymentSpecification.byUser(user), pageable);
@@ -182,7 +183,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
         var pageable = PageRequest.of(page - 1, limit);
 
         if (status != null && !status.isEmpty()) {
-            return getPaymentHistoryByStatus(status, pageable);
+            return getPaymentHistoryByStatus(status, pageable, page, limit);
         }
 
         // Use Specification to get all payments
@@ -191,7 +192,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
         return mapToDTO(payments, page, limit);
     }
 
-    private PaymentPageDTO<PaymentResDTO> getPaymentHistoryByStatus(String status, Pageable pageable) {
+    private PaymentPageDTO<PaymentResDTO> getPaymentHistoryByStatus(String status, Pageable pageable, Integer page, Integer limit) {
         var userId = authUtil.getLoginId();
         if (userId == null) {
             throw new IllegalArgumentException("User not authenticated");
@@ -212,8 +213,6 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
 
         var payments = paymentRepo.findAll(specification, pageable);
 
-        int page = pageable.getPageNumber() + 1;
-        int limit = pageable.getPageSize();
         return mapToDTO(payments, page, limit);
     }
 

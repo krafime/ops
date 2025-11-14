@@ -294,7 +294,7 @@ public class PaymentServiceIntegrationTest extends AbstractServiceIntegrationTes
         paymentService.createPayment(paymentReq);
 
         // Get payment history for customer user
-        PaymentPageDTO<PaymentResDTO> result = paymentService.getPaymentHistory(1, 10, null, customerUser.getId());
+        PaymentPageDTO<PaymentResDTO> result = paymentService.getPaymentHistory(1, 10, null, customerUser.getId().toString());
 
         assertThat(result).isNotNull();
         assertThat(result.data()).isNotNull();

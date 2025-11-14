@@ -45,7 +45,7 @@ public class PaymentController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PatchMapping("/{id}/cancel")
+    @PatchMapping("/{id}/cancellation")
     @PreAuthorize("hasAuthority('CUST')")
     @Operation(summary = "Cancel payment", description = "Customer membatalkan payment dengan status PROCESSING")
     public ResponseEntity<CommonResDTO> cancelPayment(@PathVariable String id) {
@@ -71,7 +71,7 @@ public class PaymentController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer limit,
             @RequestParam(required = false) String status) {
-        var response = paymentService.getPaymentHistory(page, limit, status, authUtil.getLoginId());
+        var response = paymentService.getPaymentHistory(page, limit, status, authUtil.getLoginId().toString());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
