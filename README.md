@@ -357,5 +357,4 @@ ENTRYPOINT ["java","-jar","/app.jar"]
 
 ## License
 
-This project is part of Mini Project 2 - DansMultiPro assessment.</content>
-<parameter name="filePath">C:\Users\SOLUSINDO\Downloads\ops\README.md
+This project is part of Mini Project 2 - Dans Multi Pro assessment.
